@@ -1,3 +1,30 @@
-./env
-./go.mod
-./go.sum
+# Binaries & executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build directories
+bin/
+build/
+dist/
+
+# Go modules cache
+vendor/
+
+# Logs
+*.log
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Environment & secrets
+.env
+.env.*
