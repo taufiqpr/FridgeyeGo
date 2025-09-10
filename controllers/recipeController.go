@@ -2,22 +2,23 @@ package controllers
 
 import (
 	"FridgeEye-Go/config"
+	"FridgeEye-Go/models"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
 func GetRecipes(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("query")
-	if query == "" {
+	queryParams := r.URL.Query()
+	apiQuery := queryParams.Encode()
+	if apiQuery == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Query is required"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "at least one query param is required"})
 		return
 	}
 
-	url := fmt.Sprintf("%s/recipes/complexSearch?query=%s&number=10&addRecipeInformation=true&apiKey=%s",
-		config.AppConfig.BaseURL, query, config.AppConfig.APIKey)
+	url := fmt.Sprintf("%s?%s&number=10&addRecipeInformation=true&apiKey=%s",
+		config.AppConfig.SpoonacularSearchEndpoint, apiQuery, config.AppConfig.APIKey)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -33,41 +34,33 @@ func GetRecipes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var data map[string]interface{}
-	if err := json.Unmarshal(body, &data); err != nil {
+	var data models.RecipeResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "failed to parse response"})
 		return
 	}
 
-	results, ok := data["results"].([]interface{})
-	if ok {
-		for _, item := range results {
-			m := item.(map[string]interface{})
-			if m["image"] == nil || m["image"] == "" {
-				if id, ok := m["id"].(float64); ok {
-					m["image"] = fmt.Sprintf("https://spoonacular.com/recipeImages/%.0f-556x370.jpg", id)
-				}
-			}
+	for i, recipe := range data.Results {
+		if recipe.Image == "" {
+			data.Results[i].Image = fmt.Sprintf("https://spoonacular.com/recipeImages/%d-556x370.jpg", recipe.ID)
 		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	json.NewEncoder(w).Encode(data.Results)
 }
 
 func GetRecipeDetail(w http.ResponseWriter, r *http.Request) {
 	recipeID := r.URL.Query().Get("id")
 	if recipeID == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Recipe ID is required"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "recipe ID is required"})
 		return
 	}
 
-	url := fmt.Sprintf("%s/recipes/%s/information?apiKey=%s",
-		config.AppConfig.BaseURL, recipeID, config.AppConfig.APIKey)
+	url := fmt.Sprintf("%s/%s/information?apiKey=%s",
+		config.AppConfig.SpoonacularDetailEndpoint, recipeID, config.AppConfig.APIKey)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -83,10 +76,8 @@ func GetRecipeDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
-	var data map[string]interface{}
-	if err := json.Unmarshal(body, &data); err != nil {
+	var data models.RecipeDetailResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "failed to parse response"})
 		return

@@ -14,6 +14,8 @@ func Routes() *mux.Router {
 	r.HandleFunc("/", controllers.Hello).Methods(http.MethodGet)
 	r.HandleFunc("/register", controllers.Register).Methods(http.MethodPost)
 	r.HandleFunc("/login", controllers.Login).Methods(http.MethodPost)
+	r.HandleFunc("/auth/google", controllers.GoogleLogin).Methods(http.MethodGet)
+	r.HandleFunc("/auth/google/callback", controllers.GoogleCallback).Methods(http.MethodGet)
 	r.Handle("/login-history", middleware.AuthMiddleware(http.HandlerFunc(controllers.GetLoginHistory))).Methods(http.MethodGet)
 	r.Handle("/profile", middleware.AuthMiddleware(http.HandlerFunc(controllers.GetProfile))).Methods(http.MethodGet)
 	r.Handle("/profile/{id}", middleware.AuthMiddleware(http.HandlerFunc(controllers.UpdateProfile))).Methods(http.MethodPut)
