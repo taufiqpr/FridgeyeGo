@@ -6,7 +6,7 @@
 *.dylib
 *.test
 *.out
-repository/
+config/*.local.json
 # Build directories
 bin/
 build/
