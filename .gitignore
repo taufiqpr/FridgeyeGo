@@ -6,7 +6,7 @@
 *.dylib
 *.test
 *.out
-
+repository/
 # Build directories
 bin/
 build/
