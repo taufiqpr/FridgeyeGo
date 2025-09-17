@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"FridgeEye-Go/config"
+	"FridgeEye-Go/helper"
 	"FridgeEye-Go/models"
 	"encoding/json"
 	"fmt"
@@ -13,7 +14,7 @@ func GetRecipes(w http.ResponseWriter, r *http.Request) {
 	apiQuery := queryParams.Encode()
 	if apiQuery == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "at least one query param is required"})
+		json.NewEncoder(w).Encode(helper.ErrRecipeQueryRequired)
 		return
 	}
 
@@ -23,21 +24,21 @@ func GetRecipes(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(url)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to fetch data"})
+		json.NewEncoder(w).Encode(helper.ErrRecipeFetchFailed)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to get recipes"})
+		json.NewEncoder(w).Encode(helper.ErrRecipeGetFailed)
 		return
 	}
 
 	var data models.RecipeResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to parse response"})
+		json.NewEncoder(w).Encode(helper.ErrRecipeParseFailed)
 		return
 	}
 
@@ -55,7 +56,7 @@ func GetRecipeDetail(w http.ResponseWriter, r *http.Request) {
 	recipeID := r.URL.Query().Get("id")
 	if recipeID == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "recipe ID is required"})
+		json.NewEncoder(w).Encode(helper.ErrRecipeIDRequired)
 		return
 	}
 
@@ -65,21 +66,21 @@ func GetRecipeDetail(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(url)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to fetch recipe detail"})
+		json.NewEncoder(w).Encode(helper.ErrRecipeFetchFailed)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to get recipe detail"})
+		json.NewEncoder(w).Encode(helper.ErrRecipeDetailFailed)
 		return
 	}
 
 	var data models.RecipeDetailResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to parse response"})
+		json.NewEncoder(w).Encode(helper.ErrRecipeParseFailed)
 		return
 	}
 
