@@ -20,3 +20,4 @@ var (
 	ErrRecipeParseFailed   = map[string]string{"error": "failed to parse response"}
 	ErrRecipeDetailFailed  = map[string]string{"error": "failed to get recipe detail"}
 )
+

@@ -2,13 +2,13 @@ package controllers
 
 import (
 	"FridgeEye-Go/config"
+	"FridgeEye-Go/helper"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -86,17 +86,15 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims := jwt.MapClaims{
-		"sub":   id,
-		"email": email,
-		"name":  name,
-		"exp":   time.Now().Add(30 * time.Minute).Unix(),
-		"iat":   time.Now().Unix(),
-	}
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := jwtToken.SignedString([]byte(config.AppConfig.JWTSecret))
+	tokenString, err := helper.GenerateToken(
+		config.AppConfig.JWTSecret,
+		id,
+		name,
+		email,
+		30*time.Minute, 
+	)
 	if err != nil {
-		http.Error(w, "Failed to sign JWT", http.StatusInternalServerError)
+		http.Error(w, "Failed to sign JWT: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -104,4 +102,5 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		"token": tokenString,
 		"user":  userData,
 	})
+
 }
