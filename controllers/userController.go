@@ -58,8 +58,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	var UserResponse models.User
 	err = config.DB.QueryRow(db.QueryRegister, req.Name, req.Email, hash).
 		Scan(&UserResponse.ID, &UserResponse.CreatedAt)
-		UserResponse.Name = req.Name
-		UserResponse.Email = req.Email
+	UserResponse.Name = req.Name
+	UserResponse.Email = req.Email
 	if err != nil {
 		helper.Error("Failed to insert user: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -113,7 +113,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		helper.Error("Failed to parse IP from RemoteAddr")
+	}
+
 	_, err = config.DB.Exec(db.QueryInsertLoginHistory, UserResponse.Email, ip, r.UserAgent())
 	if err != nil {
 		helper.Error("Failed to insert login history for " + UserResponse.Email + ": " + err.Error())
@@ -127,7 +131,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"token": tokenString,
 	})
-}
+}	
 
 func GetLoginHistory(w http.ResponseWriter, r *http.Request) {
 	emailCtx := r.Context().Value("email")
