@@ -55,10 +55,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var id int
-	var createdAt time.Time
+	var UserResponse models.User
 	err = config.DB.QueryRow(db.QueryRegister, req.Name, req.Email, hash).
-		Scan(&id, &createdAt)
+		Scan(&UserResponse.ID, &UserResponse.CreatedAt)
+		UserResponse.Name = req.Name
+		UserResponse.Email = req.Email
 	if err != nil {
 		helper.Error("Failed to insert user: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -66,15 +67,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helper.Info(fmt.Sprintf("User registered: ID=%d, Email=%s", id, req.Email))
+	helper.Info(fmt.Sprintf("User registered: ID=%d, Email=%s", UserResponse.ID, UserResponse.Email))
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":      id,
-		"name":    req.Name,
-		"email":   req.Email,
-		"created": createdAt,
-	})
+	json.NewEncoder(w).Encode(UserResponse)
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -93,9 +89,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var id int
-	var name, email, password string
-	err := config.DB.QueryRow(db.QueryLogin, req.Email).Scan(&id, &name, &email, &password)
+	var UserResponse models.User
+	err := config.DB.QueryRow(db.QueryLogin, req.Email).Scan(&UserResponse.ID, &UserResponse.Name, &UserResponse.Email, &UserResponse.Password)
 	if err != nil {
 		helper.Info("Login failed: email not found (" + req.Email + ")")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -103,30 +98,30 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !helper.CheckPasswordHash(req.Password, password) {
+	if !helper.CheckPasswordHash(req.Password, UserResponse.Password) {
 		helper.Info("Login failed: wrong password (" + req.Email + ")")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(helper.ErrWrongPassword)
 		return
 	}
 
-	tokenString, err := helper.GenerateToken(config.AppConfig.JWTSecret, id, name, email, 30*time.Minute)
+	tokenString, err := helper.GenerateToken(config.AppConfig.JWTSecret, UserResponse.ID, UserResponse.Name, UserResponse.Email, 30*time.Minute)
 	if err != nil {
-		helper.Error("Failed to generate token for user " + email + ": " + err.Error())
+		helper.Error("Failed to generate token for user " + UserResponse.Email + ": " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(helper.ErrToken)
 		return
 	}
 
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-	_, err = config.DB.Exec(db.QueryInsertLoginHistory, email, ip, r.UserAgent())
+	_, err = config.DB.Exec(db.QueryInsertLoginHistory, UserResponse.Email, ip, r.UserAgent())
 	if err != nil {
-		helper.Error("Failed to insert login history for " + email + ": " + err.Error())
+		helper.Error("Failed to insert login history for " + UserResponse.Email + ": " + err.Error())
 	} else {
-		helper.Info("Login history recorded for " + email)
+		helper.Info("Login history recorded for " + UserResponse.Email)
 	}
 
-	helper.Info(fmt.Sprintf("User logged in successfully: ID=%d, Email=%s, IP=%s", id, email, ip))
+	helper.Info(fmt.Sprintf("User logged in successfully: ID=%d, Email=%s, IP=%s", UserResponse.ID, UserResponse.Email, ip))
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
