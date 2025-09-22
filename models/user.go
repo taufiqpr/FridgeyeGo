@@ -23,3 +23,7 @@ type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email,max=30"`
 	Password string `json:"password" validate:"required,min=4,max=10"`
 }
+
+type UpdateProfileRequest struct {
+	Name	string `json:"name" validate:"required,min=2,max=50"`
+}

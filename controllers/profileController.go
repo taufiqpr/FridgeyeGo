@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"FridgeEye-Go/helper"
+	"FridgeEye-Go/models"
 	userrepo "FridgeEye-Go/repository"
 	"encoding/json"
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
@@ -18,8 +20,8 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(helper.ErrUnauthorized)
 		return
 	}
-	currentUserEmail := emailCtx.(string)
 
+	currentUserEmail := emailCtx.(string)
 	user, err := userrepo.GetUserByEmail(currentUserEmail)
 	if err != nil {
 		helper.Error("GetProfile DB error: " + err.Error())
@@ -41,14 +43,14 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	userIDStr := vars["id"]
-
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		helper.Error("UpdateProfile invalid user id: " + userIDStr)
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(helper.ErrInvalidPayload)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid user id"})
 		return
 	}
 
@@ -56,57 +58,55 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	if emailCtx == nil {
 		helper.Error("UpdateProfile unauthorized request")
 		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(helper.ErrUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "unauthorized"})
 		return
 	}
 	currentUserEmail := emailCtx.(string)
 
-	owner, err := userrepo.GetUserID(userID)
+	targetUser, err := userrepo.GetUserID(userID)
 	if err != nil {
 		helper.Error("DB error on UpdateProfile: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(helper.ErrDB)
+		json.NewEncoder(w).Encode(map[string]string{"error": "internal server error"})
 		return
 	}
-	if owner == nil {
+	if targetUser == nil {
 		helper.Error("UpdateProfile user not found id=" + userIDStr)
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(helper.ErrUserNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "user not found"})
 		return
 	}
-	if owner.Email != currentUserEmail {
+	if targetUser.Email != currentUserEmail {
 		helper.Error("UpdateProfile access denied for email: " + currentUserEmail)
 		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(helper.ErrUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "access denied"})
 		return
 	}
 
-	var req map[string]string
+	var req models.UpdateProfileRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.Error("UpdateProfile invalid payload: " + err.Error())
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(helper.ErrInvalidPayload)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid payload"})
 		return
 	}
 
-	name := req["name"]
-	if name == "" {
-		helper.Error("UpdateProfile no fields to update for user id=" + userIDStr)
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		helper.Error("UpdateProfile validation failed: " + err.Error())
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "no fields to update"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "validation failed"})
 		return
 	}
 
-	err = userrepo.UpdateUserName(userID, name)
-	if err != nil {
+	if err := userrepo.UpdateUserName(userID, req.Name); err != nil {
 		helper.Error("UpdateProfile failed DB update: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(helper.ErrDB)
+		json.NewEncoder(w).Encode(map[string]string{"error": "internal server error"})
 		return
 	}
 
 	helper.Info("Profile updated for user id=" + userIDStr)
-
 	json.NewEncoder(w).Encode(map[string]string{"message": "profile updated"})
 }
 

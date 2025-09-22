@@ -12,25 +12,30 @@ func GetUserByEmail(email string) (*models.User, error) {
 	err := config.DB.QueryRow(db.QueryGetUserByEmail, email).
 		Scan(&user.ID, &user.Name, &user.Email)
 
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, err
 	}
+
 	return &user, nil
 }
 
 func GetUserID(id int) (*models.User, error) {
 	var user models.User
-	err := config.DB.QueryRow(db.QueryGetUserByID, id).Scan(&user.ID, &user.Name, &user.Email)
+	err := config.DB.QueryRow(db.QueryGetUserByID, id).
+		Scan(&user.ID, &user.Name, &user.Email)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, err
 	}
+
 	return &user, nil
 }
 
