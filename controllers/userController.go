@@ -5,6 +5,7 @@ import (
 	"FridgeEye-Go/helper"
 	"FridgeEye-Go/models"
 	"FridgeEye-Go/repository/db"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -131,7 +132,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"token": tokenString,
 	})
-}	
+}
 
 func GetLoginHistory(w http.ResponseWriter, r *http.Request) {
 	emailCtx := r.Context().Value("email")
@@ -141,20 +142,26 @@ func GetLoginHistory(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(helper.ErrUnauthorized)
 		return
 	}
-	currentUserEmail := emailCtx.(string)
 
-	var exists bool
-	err := config.DB.QueryRow(db.QueryUserExists, currentUserEmail).Scan(&exists)
-	if err != nil {
-		helper.Error("DB error while checking user exists for " + currentUserEmail + ": " + err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(helper.ErrDB)
+	currentUserEmail, ok := emailCtx.(string)
+	if !ok {
+		helper.Info("Invalid email type in context")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(helper.ErrUnauthorized)
 		return
 	}
-	if !exists {
+
+	var user models.User
+	err := config.DB.QueryRow(db.QueryGetUserByEmail, currentUserEmail).Scan(&user.ID, &user.Name, &user.Email)
+	if err == sql.ErrNoRows {
 		helper.Info("GetLoginHistory failed: user not found (" + currentUserEmail + ")")
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(helper.ErrUserNotFound)
+		return
+	} else if err != nil {
+		helper.Error("DB error while fetching user " + currentUserEmail + ":" + err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(helper.ErrDB)
 		return
 	}
 
@@ -179,8 +186,14 @@ func GetLoginHistory(w http.ResponseWriter, r *http.Request) {
 		history = append(history, h)
 	}
 
-	helper.Info("Fetched login history for " + currentUserEmail)
+	if err := rows.Err(); err != nil {
+		helper.Error("Row iteration error for " + currentUserEmail + ": " + err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(helper.ErrDB)
+		return
+	}
 
+	helper.Info("Fetched login history for " + currentUserEmail)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(history)
 }
