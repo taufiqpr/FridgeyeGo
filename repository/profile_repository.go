@@ -2,18 +2,13 @@ package userrepo
 
 import (
 	"FridgeEye-Go/config"
+	"FridgeEye-Go/models"
 	"FridgeEye-Go/repository/db"
 	"database/sql"
 )
 
-type User struct {
-	ID    int
-	Name  string
-	Email string
-}
-
-func GetUserByEmail(email string) (*User, error) {
-	var user User
+func GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
 	err := config.DB.QueryRow(db.QueryGetUserByEmail, email).
 		Scan(&user.ID, &user.Name, &user.Email)
 
@@ -26,8 +21,8 @@ func GetUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func GetUserID(id int) (*User, error) {
-	var user User
+func GetUserID(id int) (*models.User, error) {
+	var user models.User
 	err := config.DB.QueryRow(db.QueryGetUserByID, id).Scan(&user.ID, &user.Name, &user.Email)
 
 	if err != nil {
