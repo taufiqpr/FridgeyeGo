@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"FridgeEye-Go/helper"
-	"FridgeEye-Go/models"
-	userrepo "FridgeEye-Go/repository"
+	"FridgeEye-Go/services/profile/helper"
+	"FridgeEye-Go/services/profile/models"
+	userrepo "FridgeEye-Go/services/profile/repository"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -43,7 +43,6 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProfile(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	userIDStr := vars["id"]
 	userID, err := strconv.Atoi(userIDStr)
