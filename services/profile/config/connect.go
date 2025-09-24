@@ -26,7 +26,6 @@ var (
 )
 
 func Db() {
-	// Load .env from service folder, then override with root .env if available
 	_ = godotenv.Load()
 	_ = godotenv.Overload("../../.env")
 

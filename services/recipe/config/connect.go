@@ -19,11 +19,11 @@ type Config struct {
 
 var (
 	AppConfig *Config
-	DB        *sql.DB // not used for recipe now, but kept for parity
+	DB        *sql.DB
 )
 
 func Db() {
-	// Load .env from service folder, then override with root .env if available
+
 	_ = godotenv.Load()
 	_ = godotenv.Overload("../../.env")
 

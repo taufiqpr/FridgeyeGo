@@ -5,7 +5,6 @@ var (
 	ErrDB             = map[string]string{"error": "db error"}
 	ErrToken          = map[string]string{"error": "token error"}
 	ErrUnauthorized   = map[string]string{"error": "unauthorized"}
-	// Additional errors used by controllers
 	ErrEmailAlreadyExist = map[string]string{"error": "email already exists"}
 	ErrHashPassword      = map[string]string{"error": "failed to hash password"}
 	ErrInsertUser        = map[string]string{"error": "failed to insert user"}

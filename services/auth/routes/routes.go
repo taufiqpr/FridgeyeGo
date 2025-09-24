@@ -29,7 +29,6 @@ func InitGoogleOAuth() {
 
 func Routes() *mux.Router {
 	r := mux.NewRouter()
-	// Local login/register
 	r.HandleFunc("/register", controllers.Register).Methods(http.MethodPost)
 	r.HandleFunc("/login", controllers.Login).Methods(http.MethodPost)
 	r.HandleFunc("/auth/google", GoogleLogin).Methods(http.MethodGet)

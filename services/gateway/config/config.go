@@ -19,7 +19,6 @@ type Config struct {
 var AppConfig *Config
 
 func Load() {
-	// Load .env from service folder, then override with root .env if available
 	_ = godotenv.Load()
 	_ = godotenv.Overload("../../.env")
 	AppConfig = &Config{
