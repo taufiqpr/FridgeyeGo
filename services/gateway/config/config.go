@@ -19,7 +19,6 @@ type Config struct {
 var AppConfig *Config
 
 func Load() {
-	_ = godotenv.Load()
 	_ = godotenv.Overload("../../.env")
 	AppConfig = &Config{
 		AppPort:      os.Getenv("GATEWAY_APP_PORT"),
