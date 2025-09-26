@@ -22,7 +22,6 @@ func Router() *mux.Router {
 
 	authProxy := newProxy(config.AppConfig.AuthURL)
 
-	r.PathPrefix("/auth/").Handler(http.StripPrefix("", authProxy))
 	r.PathPrefix("/register").Handler(http.StripPrefix("", authProxy))
 	r.PathPrefix("/login").Handler(http.StripPrefix("", authProxy))
 

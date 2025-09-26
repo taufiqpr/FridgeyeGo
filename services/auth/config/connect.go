@@ -29,7 +29,6 @@ var (
 )
 
 func Db() {
-	_ = godotenv.Load()
 	_ = godotenv.Overload("../../.env")
 
 	AppConfig = &Config{
