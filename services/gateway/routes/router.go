@@ -21,9 +21,11 @@ func Router() *mux.Router {
 	r.Use(middleware.CORS)
 
 	authProxy := newProxy(config.AppConfig.AuthURL)
-
 	r.PathPrefix("/register").Handler(http.StripPrefix("", authProxy))
 	r.PathPrefix("/login").Handler(http.StripPrefix("", authProxy))
+
+	profileProxy := newProxy(config.AppConfig.ProfileURL)
+	r.PathPrefix("/profile").Handler(http.StripPrefix("", profileProxy))
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
