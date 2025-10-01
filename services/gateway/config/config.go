@@ -19,7 +19,7 @@ type Config struct {
 var AppConfig *Config
 
 func Load() {
-	_ = godotenv.Overload("../../.env")
+	_ = godotenv.Load()
 	AppConfig = &Config{
 		AppPort:      os.Getenv("GATEWAY_APP_PORT"),
 		AuthURL:      getenvDefault("AUTH_BASE_URL", "http://localhost:8081"),
