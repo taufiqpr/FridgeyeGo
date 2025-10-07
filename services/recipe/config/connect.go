@@ -25,8 +25,6 @@ var (
 func Db() {
 
 	_ = godotenv.Load()
-	_ = godotenv.Overload("../../.env")
-
 	AppConfig = &Config{
 		JWTSecret:                 os.Getenv("JWT_SECRET"),
 		AppPort:                   os.Getenv("RECIPE_APP_PORT"),

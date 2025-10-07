@@ -27,8 +27,6 @@ var (
 
 func Db() {
 	_ = godotenv.Load()
-	_ = godotenv.Overload("../../.env")
-
 	AppConfig = &Config{
 		DBHost:     os.Getenv("DB_HOST"),
 		DBPort:     os.Getenv("DB_PORT"),

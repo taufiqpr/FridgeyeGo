@@ -33,6 +33,10 @@ func JWT(next http.Handler) http.Handler {
 			http.Error(w, "invalid claims", http.StatusUnauthorized)
 			return
 		}
+
+		r.Header.Set("X-User-Id", fmt.Sprint(claims["sub"]))
+		r.Header.Set("X-User-Email", fmt.Sprint(claims["email"]))
+
 		ctx := context.WithValue(r.Context(), "user_id", claims["sub"])
 		ctx = context.WithValue(ctx, "email", claims["email"])
 		next.ServeHTTP(w, r.WithContext(ctx))
