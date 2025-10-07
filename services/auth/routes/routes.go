@@ -31,6 +31,7 @@ func Routes() *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/register", controllers.Register).Methods(http.MethodPost)
 	r.HandleFunc("/login", controllers.Login).Methods(http.MethodPost)
+	r.HandleFunc("/login-history", controllers.GetLoginHistory).Methods(http.MethodGet)
 	r.HandleFunc("/auth/google", GoogleLogin).Methods(http.MethodGet)
 	r.HandleFunc("/auth/google/callback", GoogleCallback).Methods(http.MethodGet)
 	return r

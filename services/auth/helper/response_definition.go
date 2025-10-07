@@ -10,4 +10,6 @@ var (
 	ErrInsertUser        = map[string]string{"error": "failed to insert user"}
 	ErrEmailNotFound     = map[string]string{"error": "email not found"}
 	ErrWrongPassword     = map[string]string{"error": "wrong password"}
+	ErrUserNotFound      = map[string]string{"error": "user not found"}
+	ErrScan              = map[string]string{"error": "scan error"}
 )
